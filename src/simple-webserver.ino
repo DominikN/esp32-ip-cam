@@ -1,8 +1,7 @@
-#include <AsyncElegantOTA.h>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
 #include <Husarnet.h>
+#include <WebServer.h>
 #include <WiFi.h>
+#include <esp32cam.h>
 
 #define HTTP_PORT 8080
 
@@ -27,23 +26,45 @@ const char *dashboardURL = "default";
 
 #endif
 
-AsyncWebServer server(HTTP_PORT);
+WebServer server(HTTP_PORT);
 
-// index.html available in "index_html" const String
-extern const char index_html_start[] asm("_binary_src_index_html_start");
-const String index_html = String((const char*)index_html_start);
+void handleMjpeg() {
+  // Configure stream
+  static struct esp32cam::CameraClass::StreamMjpegConfig mjcfg;
+  mjcfg.frameTimeout = 1000;  // ms
+  mjcfg.minInterval = 100;    // ms
+  mjcfg.maxFrames =
+      -1;  // -1 means - send frames until error occurs or client disconnects
+
+  // Actually stream
+  auto client = server.client();
+
+  auto startTime = millis();
+
+  int res = esp32cam::Camera.streamMjpeg(client, mjcfg);
+  // int res = esp32cam::Camera.streamMjpeg(client);
+  if (res <= 0) {
+    Serial1.printf("Stream error: %d\n", res);
+    return;
+  }
+
+  auto duration = millis() - startTime;
+  Serial1.printf("Stream end %d frames, on average %0.2f FPS\n", res,
+                 1000.0 * res / duration);
+}
 
 void setup(void) {
   // ===============================================
-  // Wi-Fi, OTA and Husarnet VPN configuration
+  // Wi-Fi and Husarnet VPN configuration
   // ===============================================
 
-  // remap default Serial (used by Husarnet logs) 
+  // remap default Serial (used by Husarnet logs)
   Serial.begin(115200, SERIAL_8N1, 16, 17);  // from P3 & P1 to P16 & P17
-  Serial1.begin(115200, SERIAL_8N1, 3, 1);  // remap Serial1 from P9 & P10 to P3 & P1
+  Serial1.begin(115200, SERIAL_8N1, 3,
+                1);  // remap Serial1 from P9 & P10 to P3 & P1
 
   Serial1.println("\r\n**************************************");
-  Serial1.println("GitHub Actions OTA example");
+  Serial1.println("ESP32 IP camera example");
   Serial1.println("**************************************\r\n");
 
   // Init Wi-Fi
@@ -70,7 +91,7 @@ void setup(void) {
   Husarnet.join(husarnetJoinCode, hostName);
   Husarnet.start();
 
-  // Before Husarnet is ready peer list contains: 
+  // Before Husarnet is ready peer list contains:
   // master (0000:0000:0000:0000:0000:0000:0000:0001)
   const uint8_t addr_comp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
   bool husarnetReady = 0;
@@ -88,34 +109,39 @@ void setup(void) {
 
   Serial1.println(" done\r\n");
 
-  // define HTTP API for remote reset
-  server.on("/reset", HTTP_POST, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "Reseting ESP32 after 1s ...");
-    Serial1.println("Software reset on POST request");
-    delay(1000);
-    ESP.restart();
-  });
-
-  // Init OTA webserver (available under /update path)
-  AsyncElegantOTA.begin(&server);
-  server.begin();
-
   // ===============================================
   // PLACE YOUR APPLICATION CODE BELOW
   // ===============================================
 
-  // Example webserver hosting table with known Husarnet Hosts
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/html", index_html);
-  });
+  // Configure camera
+  // Tested on M5CAMERA X
+  esp32cam::Config cfg;
 
-  Serial1.println("🚀 HTTP server started\r\n");
-  Serial1.printf("Visit:\r\nhttp://%s:%d/\r\n\r\n", hostName, HTTP_PORT);
+  cfg.setPins(esp32cam::pins::M5CameraLED);
+  cfg.setResolution(esp32cam::Resolution::find(320, 240));
+  cfg.setBufferCount(2);
+  cfg.setJpeg(80);
+
+  bool ok = esp32cam::Camera.begin(cfg);
+  if (!ok) {
+    Serial1.println("Camera initialization failed");
+  }
+
+  // Setup the stream webserver
+  server.on("/stream", handleMjpeg);
+  server.begin();
+
+  Serial1.println("🚀 HTTP server with a live video stream started\r\n");
+  Serial1.printf("Visit:\r\nhttp://%s:%d/stream\r\n\r\n", hostName, HTTP_PORT);
 
   Serial1.printf("Known hosts:\r\n");
   for (auto const &host : Husarnet.listPeers()) {
-    Serial1.printf("%s (%s)\r\n", host.second.c_str(), host.first.toString().c_str());
+    Serial1.printf("%s (%s)\r\n", host.second.c_str(),
+                   host.first.toString().c_str());
   }
 }
 
-void loop(void) { ; }
+void loop(void) {
+  server.handleClient();
+  delay(10);
+}
