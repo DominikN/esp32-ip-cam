@@ -25,7 +25,7 @@ Over the internet available live vide stream from ESP32 camera (tested ob `M5CAM
 
     ⌛ 2. Waiting for Husarnet to be ready ... done
 
-    🚀 HTTP server started
+    🚀 HTTP server with a live video stream started
 
     Visit:
     http://my-esp32-cam:8080/stream
