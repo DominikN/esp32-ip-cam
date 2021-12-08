@@ -32,7 +32,7 @@ void handleMjpeg() {
   // Configure stream
   static struct esp32cam::CameraClass::StreamMjpegConfig mjcfg;
   mjcfg.frameTimeout = 1000;  // ms
-  mjcfg.minInterval = 100;    // ms
+  mjcfg.minInterval = 0;    // ms
   mjcfg.maxFrames =
       -1;  // -1 means - send frames until error occurs or client disconnects
 
