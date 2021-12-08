@@ -1,16 +1,12 @@
-# esp32-internet-ota
+# esp32-ip-cam
 
-ESP32 + GitHub Actions + Husarnet. 
-
-A boilerplate project for ESP32 allowing in-field firmware update using GitHub Actions workflow.
+Over the internet available live vide stream from ESP32 camera (tested ob `M5CAMERA X` module).
 
 > **Prerequisites** 
 >
 > Install [Visual Studio Code](https://code.visualstudio.com/) with [PlatformIO extension](https://platformio.org/install/ide?install=vscode).
 
 ## Quick start
-
-### First setup
 
 1. Click **[Use this template](https://github.com/husarnet/esp32-internet-ota/generate)** button to create your own copy of this repo.
 
@@ -32,37 +28,12 @@ A boilerplate project for ESP32 allowing in-field firmware update using GitHub A
     🚀 HTTP server started
 
     Visit:
-    http://my-esp32:8080/
+    http://my-esp32-cam:8080/stream
 
     Known hosts:
     my-laptop (fc94:a4c1:1f22:ab3b:b04a:1a3b:ba15:84bc)
-    my-esp32 (fc94:f632:c8d9:d2a6:ad18:ed16:ed7e:9f3f)
+    my-esp32-cam (fc94:f632:c8d9:d2a6:ad18:ed16:ed7e:9f3f)
     ```
-
-### Internet OTA with GitHub Actions
-
-1. Create the folowing GitHub repository secrets (`Settings` > `Secrets` > `New repository secret`):
-
-    | Secret | Sample Value | Desription |
-    | - | - | - |
-    | `WIFI_SSID` | FreeWifi | just your WiFi network name |
-    | `WIFI_PASS` | hardtoguess | ... and password |
-    | `HUSARNET_HOSTNAME` | my-esp32 | hostname under which you want your ESP32 to be available by other peers |
-    | `HUSARNET_JOINCODE` | fc94:...:932a/xhfqwPxxxetyCExsSPRPn9 | find your own **secret** Join Code at your user account at https://app/husarnet.com > `choosen network` >  `add element` button. Anyone with this Join Code can connect to your Husarnet network |
-
-2. Push changes to your repo:
-
-    ```bash
-    git add *
-    git commit -m "triggering the workflow"
-    git push
-    ```
-
-3. In ~3 minutes the GitHub workflow should finish its job. Visit: `http://my-esp32:8080` URL with a sample "Hello world" website hosted by your ESP32.
-
-
-    Of course your laptop need to be connected to the same Husarnet network - you will find quick start guide showing how to do it here: https://husarnet.com/docs/
-
 
 ## Tips
 
