@@ -5,7 +5,20 @@
 
 // For local development (rename credenials-template.h and type your WiFi and
 // Husarnet credentials there)
+#if __has_include("credentials.h")
 #include "credentials.h"
+#else
+// For GitHub Actions 
+
+// WiFi credentials
+const char *ssid = WIFI_SSID;
+const char *password = WIFI_PASS;
+
+// Husarnet credentials
+const char *hostName = HUSARNET_HOSTNAME;
+const char *husarnetJoinCode = HUSARNET_JOINCODE;  // find at app.husarnet.com
+const char *dashboardURL = "default";
+#endif
 
 #define HTTP_PORT 8080
 
@@ -77,7 +90,7 @@ void setup(void) {
 
   // Configure camera
   // Tested on M5CAMERA X
-  
+
   esp32cam::Config cfg;
 
   cfg.setPins(esp32cam::pins::M5CameraLED);
