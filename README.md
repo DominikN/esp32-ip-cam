@@ -10,13 +10,11 @@ Over the internet available live vide stream from ESP32 camera (tested ob `M5CAM
 
 ## Quick start
 
-1. Click **[Use this template](https://github.com/husarnet/esp32-internet-ota/generate)** button to create your own copy of this repo.
+1. Clone the repo and open it in Visual Studio Code. PlatformIO should automatically install all project dependencies.
 
-2. Clone the repo you have just created and open it in Visual Studio Code. Platformio should automatically install all project dependencies.
+2. Rename `credentials-template.h` to `credentials.h` and type your WiFi an Husarnet credentials there (you will find you Husarnet Join Code at https://app.husarnet.com).
 
-3. Rename `credentials-template.h` to `credentials.h` and type your WiFi an Husarnet credentials there (you will find you Husarnet Join Code at https://app.husarnet.com).
-
-4. Click "PlatformIO: upload" button to flash your ESP32 board connected to your laptop. You will find the following log in the serial monitor:
+3. Click `"PlatformIO: upload"` button to flash your ESP32 board connected to your laptop. You will find the following log in the serial monitor:
 
     ```bash
     **************************************
