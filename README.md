@@ -1,5 +1,7 @@
 # esp32-ip-cam
 
+[![ESP32 build firmware](https://github.com/DominikN/esp32-ip-cam/actions/workflows/ota-update.yml/badge.svg)](https://github.com/DominikN/esp32-ip-cam/actions/workflows/ota-update.yml)
+
 Over the internet available live vide stream from ESP32 camera (tested ob `M5CAMERA X` module).
 
 > **Prerequisites** 

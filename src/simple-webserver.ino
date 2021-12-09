@@ -3,28 +3,11 @@
 #include <WiFi.h>
 #include <esp32cam.h>
 
-#define HTTP_PORT 8080
-
-#if __has_include("credentials.h")
-
 // For local development (rename credenials-template.h and type your WiFi and
 // Husarnet credentials there)
 #include "credentials.h"
 
-#else
-
-// For GitHub Actions OTA deploment
-
-// WiFi credentials
-const char *ssid = WIFI_SSID;
-const char *password = WIFI_PASS;
-
-// Husarnet credentials
-const char *hostName = HUSARNET_HOSTNAME;
-const char *husarnetJoinCode = HUSARNET_JOINCODE;  // find at app.husarnet.com
-const char *dashboardURL = "default";
-
-#endif
+#define HTTP_PORT 8080
 
 WebServer server(HTTP_PORT);
 
@@ -38,7 +21,6 @@ void handleMjpeg() {
 
   // Actually stream
   auto client = server.client();
-
   auto startTime = millis();
 
   int res = esp32cam::Camera.streamMjpeg(client, mjcfg);
@@ -60,8 +42,7 @@ void setup(void) {
 
   // remap default Serial (used by Husarnet logs)
   Serial.begin(115200, SERIAL_8N1, 16, 17);  // from P3 & P1 to P16 & P17
-  Serial1.begin(115200, SERIAL_8N1, 3,
-                1);  // remap Serial1 from P9 & P10 to P3 & P1
+  Serial1.begin(115200, SERIAL_8N1, 3, 1);  // remap Serial1 from P9 & P10 to P3 & P1
 
   Serial1.println("\r\n**************************************");
   Serial1.println("ESP32 IP camera example");
@@ -136,8 +117,7 @@ void setup(void) {
 
   Serial1.printf("Known hosts:\r\n");
   for (auto const &host : Husarnet.listPeers()) {
-    Serial1.printf("%s (%s)\r\n", host.second.c_str(),
-                   host.first.toString().c_str());
+    Serial1.printf("%s (%s)\r\n", host.second.c_str(), host.first.toString().c_str());
   }
 }
 
