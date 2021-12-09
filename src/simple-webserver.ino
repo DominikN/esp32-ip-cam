@@ -9,31 +9,11 @@
 
 #define HTTP_PORT 8080
 
+// index.html available in "index_html" const String
+extern const char index_html_start[] asm("_binary_src_index_html_start");
+const String index_html = String((const char *)index_html_start);
+
 WebServer server(HTTP_PORT);
-
-void handleMjpeg() {
-  // Configure stream
-  static struct esp32cam::CameraClass::StreamMjpegConfig mjcfg;
-  mjcfg.frameTimeout = 1000;  // ms
-  mjcfg.minInterval = 0;    // ms
-  mjcfg.maxFrames =
-      -1;  // -1 means - send frames until error occurs or client disconnects
-
-  // Actually stream
-  auto client = server.client();
-  auto startTime = millis();
-
-  int res = esp32cam::Camera.streamMjpeg(client, mjcfg);
-  // int res = esp32cam::Camera.streamMjpeg(client);
-  if (res <= 0) {
-    Serial1.printf("Stream error: %d\n", res);
-    return;
-  }
-
-  auto duration = millis() - startTime;
-  Serial1.printf("Stream end %d frames, on average %0.2f FPS\n", res,
-                 1000.0 * res / duration);
-}
 
 void setup(void) {
   // ===============================================
@@ -42,14 +22,15 @@ void setup(void) {
 
   // remap default Serial (used by Husarnet logs)
   Serial.begin(115200, SERIAL_8N1, 16, 17);  // from P3 & P1 to P16 & P17
-  Serial1.begin(115200, SERIAL_8N1, 3, 1);  // remap Serial1 from P9 & P10 to P3 & P1
+  Serial1.begin(115200, SERIAL_8N1, 3,
+                1);  // remap Serial1 from P9 & P10 to P3 & P1
 
   Serial1.println("\r\n**************************************");
   Serial1.println("ESP32 IP camera example");
   Serial1.println("**************************************\r\n");
 
   // Init Wi-Fi
-  Serial1.printf("📻 1. Connecting to: %s Wi-Fi network ", ssid);
+  Serial1.printf("📻 1. Connecting to: \"%s\" Wi-Fi network ", ssid);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
@@ -96,6 +77,7 @@ void setup(void) {
 
   // Configure camera
   // Tested on M5CAMERA X
+  
   esp32cam::Config cfg;
 
   cfg.setPins(esp32cam::pins::M5CameraLED);
@@ -109,8 +91,32 @@ void setup(void) {
   }
 
   // Setup the stream webserver
-  server.on("/stream", handleMjpeg);
+
+  server.on("/stream", []() {
+    // Configure stream
+    static struct esp32cam::CameraClass::StreamMjpegConfig mjcfg;
+    mjcfg.frameTimeout = 1000;  // ms
+    mjcfg.minInterval = 0;      // ms
+    mjcfg.maxFrames = -1;  // send frames until error occurs or client disconnects
+
+    // Actually stream
+    auto client = server.client();
+    auto startTime = millis();
+
+    int res = esp32cam::Camera.streamMjpeg(client, mjcfg);
+    if (res <= 0) {
+      Serial1.printf("Stream error: %d\n", res);
+      return;
+    }
+
+    auto duration = millis() - startTime;
+    Serial1.printf("Stream end %d frames, on average %0.2f FPS\n", res, 1000.0 * res / duration);
+  });
+  server.on("/", []() { server.send(200, "text/html", index_html); });
+  server.onNotFound( []() { server.send(200, "text/plain", "not found :("); });
   server.begin();
+
+  // Print peer addresses and link to the stream
 
   Serial1.println("🚀 HTTP server with a live video stream started\r\n");
   Serial1.printf("Visit:\r\nhttp://%s:%d/stream\r\n\r\n", hostName, HTTP_PORT);
