@@ -22,8 +22,10 @@ jobs:
     # - name: ESP32 software reset
     #   run: curl -X POST 'http://${{ secrets.HUSARNET_HOSTNAME }}:8080/reset'
 
-    - name: Installing platformio
-      run: pip3 install -U platformio
+    - name: Installing platformio and installing libs
+      run: |
+        pip3 install -U platformio
+        pio lib install
 
     - name: Building a firmware for ESP32
       run: |
